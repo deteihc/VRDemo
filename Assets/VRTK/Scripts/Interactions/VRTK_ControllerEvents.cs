@@ -1066,9 +1066,14 @@ namespace VRTK
 
         private bool Vector2ShallowEquals(Vector2 vectorA, Vector2 vectorB)
         {
-            var distanceVector = vectorA - vectorB;
-            return Math.Round(Mathf.Abs(distanceVector.x), axisFidelity, MidpointRounding.AwayFromZero) < float.Epsilon
-                   && Math.Round(Mathf.Abs(distanceVector.y), axisFidelity, MidpointRounding.AwayFromZero) < float.Epsilon;
+            // 由于用变化量来作为判断条件的话会造成，当一帧的变化量小于0.05时判断为没变化，造成当你缓慢移动的时候永远返回True，这样判断为无变化与现实需求不一致
+            //var distanceVector = vectorA - vectorB;
+            //return Math.Round(Mathf.Abs(distanceVector.x), axisFidelity, MidpointRounding.AwayFromZero) < float.Epsilon
+            //       && Math.Round(Mathf.Abs(distanceVector.y), axisFidelity, MidpointRounding.AwayFromZero) < float.Epsilon;
+
+            // 改为以变化临界点来判断，当值从小0.05变为大于0.05时返回False
+            return Math.Round(vectorA.x, axisFidelity) == Math.Round(vectorB.x, axisFidelity) &&
+                    Math.Round(vectorA.y, axisFidelity) == Math.Round(vectorB.y, axisFidelity);
         }
 
         private void DisableEvents()
