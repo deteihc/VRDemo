@@ -22,9 +22,9 @@ namespace Examples
         [Header("Adjustments")]
 
         [Tooltip("Adjust hand movement speed.")]
-        public float handMoveMultiplier = 0.002f;
+        public float handMoveMultiplier = 0.2f;
         [Tooltip("Adjust hand rotation speed.")]
-        public float handRotationMultiplier = 0.5f;
+        public float handRotationMultiplier = 30f;
         [Tooltip("Adjust player movement speed.")]
         public float playerMoveMultiplier = 5;
         [Tooltip("Adjust player rotation speed.")]
@@ -131,12 +131,12 @@ namespace Examples
             {
                 UpdateHands();
             }
-            else
+            else if(Input.GetMouseButton(0))
             {
                 UpdateRotation();
             }
 
-            UpdatePosition();
+            //UpdatePosition();
         }
 
         private void UpdateHands()
