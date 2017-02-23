@@ -72,6 +72,7 @@
 
         private void DebugLogger(uint index, string button, string action, ControllerInteractionEventArgs e)
         {
+            return;
             Debug.Log(hand.ToString() + " Controller on index '" + index + "' " + button + " has been " + action
                     + " with a pressure of " + e.buttonPressure + " / trackpad axis at: " + e.touchpadAxis + " (" + e.touchpadAngle + " degrees)");
         }
