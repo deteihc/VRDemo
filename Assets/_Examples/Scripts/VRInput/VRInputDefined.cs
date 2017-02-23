@@ -2,9 +2,37 @@
 {
     using UnityEngine;
     using System.Collections;
+    using UnityEngine.VR;
 
     public static class VRInputDefined
     {
+        #region vr contraller
+        public static bool isHMDConnected
+        {
+            get
+            {
+                if (VRSettings.enabled == true)
+                {
+                    if (VRDevice.isPresent)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (SteamVR.connected[0] == true)
+                    {
+                        return true;
+                    }
+                    else if (OVRManager.isHmdPresent)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+        #endregion vr contraller
         public static VRControllerEventArgs ChangeArgsType(Hand hand, VRTK.ControllerInteractionEventArgs e)
         {
             VRControllerEventArgs ee;
