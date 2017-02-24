@@ -1,12 +1,13 @@
 ﻿namespace Examples
 {
-    using UnityEngine;
     using System.Collections;
+    using UnityEngine;
     using UnityEngine.VR;
 
     public static class VRInputDefined
     {
-        #region vr contraller
+        public static bool openSimKey { get { return true; } }
+
         public static bool isHMDConnected
         {
             get
@@ -32,7 +33,7 @@
                 return false;
             }
         }
-        #endregion vr contraller
+
         public static VRControllerEventArgs ChangeArgsType(Hand hand, VRTK.ControllerInteractionEventArgs e)
         {
             VRControllerEventArgs ee;

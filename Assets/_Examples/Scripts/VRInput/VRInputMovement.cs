@@ -5,13 +5,17 @@
 
     public class VRInputMovement : MonoBehaviour
     {
-        private Hand controllerHand = Hand.LEFT;
+        protected bool openDoubleClick = true;
+
+        protected Hand controllerHand = Hand.LEFT;
+        protected bool isPressed = false;
+        protected bool moving = false;
 
         private void OnEnable()
         {
-            GlobalEvent.register("OnTouchpadPressed", this, "StartMove");
-            GlobalEvent.register("OnTouchpadReleased", this, "StopMove");
-            GlobalEvent.register("OnTouchpadAxisChanged", this, "ChangeMove");
+            GlobalEvent.register("OnTouchpadPressed", this, "OnPressed");
+            GlobalEvent.register("OnTouchpadReleased", this, "OnReleased");
+            GlobalEvent.register("OnTouchpadAxisChanged", this, "OnChanged");
         }
 
         private void OnDisable()
@@ -19,33 +23,65 @@
             GlobalEvent.deregister(this);
         }
 
-        public void StartMove(VRControllerEventArgs e)
+        public void OnPressed(VRControllerEventArgs e)
         {
             if (e.hand == controllerHand)
             {
-                GlobalEvent.fire("OnStartMove", e.touchpadAxis);
+                isPressed = true;
+                if (openDoubleClick)
+                    DoPressed(e);
+                else
+                    StartMove(e);
             }
         }
 
-        public void StopMove(VRControllerEventArgs e)
+        public void OnReleased(VRControllerEventArgs e)
         {
             if (e.hand == controllerHand)
             {
-                GlobalEvent.fire("OnStopMove");
+                isPressed = false;
+                StopMove(e);
             }
         }
 
-        public void ChangeMove(VRControllerEventArgs e)
+        public void OnChanged(VRControllerEventArgs e)
         {
             if (e.hand == controllerHand)
             {
+                if (isPressed)
+                    ChangeMove(e);
+            }
+        }
+
+        protected void StartMove(VRControllerEventArgs e)
+        {
+            moving = true;
+            GlobalEvent.fire("OnStartMove", e.touchpadAxis);
+        }
+
+        protected void StopMove(VRControllerEventArgs e)
+        {
+            moving = false;
+            GlobalEvent.fire("OnStopMove");
+        }
+
+        protected void ChangeMove(VRControllerEventArgs e)
+        {
+            if (moving)
                 GlobalEvent.fire("OnChangeMove", e.touchpadAxis);
-            }
         }
+
+        protected void DoubleClickMove(VRControllerEventArgs e)
+        {
+            GlobalEvent.fire("DoubleClickMove", e.touchpadAxis);
+        }
+
+        #region 键盘模拟
 
         private void Update()
         {
-            UpdateSimKey();
+            if (VRInputDefined.openSimKey)
+                UpdateSimKey();
         }
 
         private Vector3 moveAxis = Vector3.zero;
@@ -77,23 +113,65 @@
             {
                 if (axis == Vector3.zero)
                 {
-                    //StopMove
-                    StopMove(VRInputDefined.MakeEventArgs(controllerHand, Vector2.zero));
+                    //OnReleased
+                    OnReleased(VRInputDefined.MakeEventArgs(controllerHand, Vector2.zero));
                 }
                 else if (axis != moveAxis)
                 {
-                    //ChangeMove
-                    ChangeMove(VRInputDefined.MakeEventArgs(controllerHand, new Vector2(axis.x, axis.z)));
+                    //OnChanged
+                    OnChanged(VRInputDefined.MakeEventArgs(controllerHand, new Vector2(axis.x, axis.z)));
                 }
             }
 
             if (moveAxis == Vector3.zero && axis != Vector3.zero)
             {
-                //StartMove
-                StartMove(VRInputDefined.MakeEventArgs(controllerHand, new Vector2(axis.x, axis.z)));
+                //OnPressed
+                OnPressed(VRInputDefined.MakeEventArgs(controllerHand, new Vector2(axis.x, axis.z)));
             }
 
             moveAxis = axis;
         }
+
+        #endregion 键盘模拟
+
+        #region 双击功能
+
+        private bool firstClick = false;
+        private float firstClickTime;
+        private float secondClickTimeSpan = 0.3f;
+
+        private void DoPressed(VRControllerEventArgs e)
+        {
+            //第一击
+            if (!firstClick)
+            {
+                firstClick = true;
+                StartCoroutine(CheckDoubleClick(e));
+            }
+            //第二击
+            else
+            {
+                firstClick = false;
+                DoubleClickMove(e);
+            }
+        }
+
+        private IEnumerator CheckDoubleClick(VRControllerEventArgs e)
+        {
+            firstClickTime = Time.time;
+            while (firstClick)
+            {
+                //超时
+                if (Time.time - firstClickTime > secondClickTimeSpan)
+                {
+                    firstClick = false;
+                    if (isPressed)
+                        StartMove(e);
+                }
+                yield return new WaitForEndOfFrame();
+            }
+        }
+
+        #endregion 双击功能
     }
 }
